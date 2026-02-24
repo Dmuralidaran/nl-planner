@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netherlands Relocation Planner | India to NL</title>
+<meta name="description" content="Comprehensive relocation planner for Indian nationals moving to the Netherlands. Track immigration tasks, documents, budgets, and deadlines.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Outfit',system-ui,sans-serif}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{border-radius:2px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+button,select,input{font-family:'Outfit',system-ui,sans-serif}
+@media print{.np{display:none!important}}
+@media(max-width:600px){.nl{display:none}.ma{padding:12px 10px 80px!important}.cg{grid-template-columns:1fr!important}.gl{width:120px!important;min-width:120px!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const {useState,useEffect,useMemo,useCallback}=React;
+
+const EUR_INR=92.5;
+const SK="nl-plan-v7";
+
+function load(){try{const v=localStorage.getItem(SK);return v?JSON.parse(v):null;}catch(e){return null;}}
+function save(data){try{localStorage.setItem(SK,JSON.stringify(data));}catch(e){}}
+
+const P=[
+  {id:"prep",n:1,t:"Pre-Departure",s:"India",secs:[
+    {t:"Employment",items:[
+      {id:"a1",t:"Sign employment contract",d:"Confirm salary, start date, benefits, relocation package.",p:"critical",w:12,e:0,r:0},
+      {id:"a2",t:"Verify employer is IND-recognised sponsor",d:"Check public register at ind.nl.",p:"critical",w:12,e:0,r:0,lk:"https://ind.nl/en/public-register-recognised-sponsors"},
+      {id:"a3",t:"Confirm salary meets HSM threshold",d:"30+: EUR 5,752/mo. Under 30: EUR 4,171/mo (2025).",p:"critical",w:11,e:0,r:0},
+      {id:"a4",t:"Discuss 30% ruling eligibility",d:"150+ km rule. Stepped: 30/20/10% over 5 years.",p:"high",w:11,e:0,r:0},
+    ]},
+    {t:"Document Legalisation",items:[
+      {id:"a5",t:"Apostille birth certificate via MEA",d:"Original required. Valid 6 months.",p:"critical",w:10,e:0,r:4000,c:"doc"},
+      {id:"a6",t:"Apostille marriage certificate",d:"If applicable. From state Registrar.",p:"high",w:10,e:0,r:4000,c:"doc"},
+      {id:"a7",t:"Apostille degree certificates",d:"All originals. English accepted.",p:"critical",w:10,e:0,r:4000,c:"doc"},
+      {id:"a8",t:"Police Clearance Certificate",d:"Passport Seva Kendra + MEA apostille.",p:"high",w:9,e:0,r:1500,c:"doc"},
+      {id:"a9",t:"Certified photocopies (3+ sets)",d:"Single-sided only.",p:"medium",w:8,e:0,r:800,c:"doc"},
+    ]},
+    {t:"MVV Application",items:[
+      {id:"a10",t:"Employer submits MVV to IND",d:"Combined application. 2-4 weeks.",p:"critical",w:8,e:210,r:0,c:"imm"},
+      {id:"a11",t:"Receive IND decision letter",d:"Contains V-number.",p:"critical",w:6,e:0,r:0},
+      {id:"a12",t:"Book MVV embassy appointment",d:"Delhi/Mumbai/Bengaluru. Book immediately.",p:"critical",w:5,e:0,r:0},
+      {id:"a13",t:"Attend MVV appointment",d:"Passport held ~10 working days.",p:"critical",w:4,e:0,r:0},
+    ]},
+    {t:"Housing & Finances",items:[
+      {id:"a15",t:"Secure accommodation",d:"Legitimate rental. No hotels/Airbnbs.",p:"critical",w:6,e:1800,r:0,c:"housing"},
+      {id:"a16",t:"Prepare relocation funds",d:"Deposit + first month. EUR 3,000-6,000.",p:"high",w:4,e:4500,r:0,c:"housing"},
+      {id:"a17",t:"International banking setup",d:"Visa/Mastercard. Consider Wise.",p:"high",w:4,e:0,r:500,c:"misc"},
+      {id:"a18",t:"Book flights to Schiphol",d:"KLM, Air India.",p:"medium",w:3,e:0,r:55000,c:"travel"},
+    ]},
+  ]},
+  {id:"arr",n:2,t:"Arrival",s:"Days 1-5",secs:[
+    {t:"Municipality Registration",items:[
+      {id:"b1",t:"Pre-book gemeente appointment",d:"2-4 week wait. Mandatory within 5 days.",p:"critical",w:3,e:0,r:0},
+      {id:"b2",t:"Register at municipality",d:"Passport+MVV, rental, landlord consent, certs.",p:"critical",w:0,e:0,r:0},
+      {id:"b3",t:"Receive BSN number",d:"Required for banking, insurance, tax.",p:"critical",w:0,e:0,r:0},
+    ]},
+    {t:"Residence Permit",items:[
+      {id:"b4",t:"Submit biometrics at IND",d:"Photo + fingerprints.",p:"critical",w:0,e:0,r:0},
+      {id:"b5",t:"Collect residence permit card",d:"Check MyIND portal.",p:"high",w:-2,e:0,r:0},
+    ]},
+  ]},
+  {id:"setup",n:3,t:"Essential Setup",s:"Weeks 1-2",secs:[
+    {t:"Banking & Insurance",items:[
+      {id:"c1",t:"Open Dutch bank account",d:"ING/ABN AMRO/Bunq.",p:"critical",w:-1,e:3,r:0,c:"mo"},
+      {id:"c2",t:"Enrol in health insurance",d:"Mandatory. EUR 140-170/mo.",p:"critical",w:-1,e:155,r:0,c:"mo"},
+      {id:"c3",t:"Register with huisarts (GP)",d:"Gateway to specialist care.",p:"high",w:-2,e:0,r:0},
+    ]},
+    {t:"Digital Identity & Tax",items:[
+      {id:"c4",t:"Apply for DigiD",d:"digid.nl. Requires BSN.",p:"critical",w:-1,e:0,r:0,lk:"https://www.digid.nl/en"},
+      {id:"c5",t:"Activate DigiD account",d:"Activation letter in ~5 days.",p:"critical",w:-2,e:0,r:0},
+      {id:"c6",t:"File 30% ruling application",d:"Within 4 months of start.",p:"high",w:-2,e:0,r:0},
+    ]},
+  ]},
+  {id:"settle",n:4,t:"Settling In",s:"Month 1",secs:[
+    {t:"Transport & Utilities",items:[
+      {id:"d1",t:"OV-chipkaart",d:"Public transport card.",p:"high",w:-1,e:8,r:0,c:"trn"},
+      {id:"d2",t:"Purchase bicycle",d:"Second-hand EUR 50-200.",p:"high",w:-1,e:180,r:0,c:"trn"},
+      {id:"d3",t:"Dutch mobile plan",d:"From EUR 10/mo.",p:"high",w:-1,e:15,r:0,c:"mo"},
+      {id:"d4",t:"Home internet",d:"Ziggo, KPN.",p:"medium",w:-2,e:45,r:0,c:"mo"},
+      {id:"d5",t:"Gas and electricity",d:"Check if included in rent.",p:"high",w:-1,e:150,r:0,c:"mo"},
+      {id:"d6",t:"Driving licence process",d:"No India-NL exchange.",p:"low",w:-4,e:1600,r:0,c:"trn"},
+    ]},
+  ]},
+  {id:"long",n:5,t:"Long-term",s:"Months 1-3",secs:[
+    {t:"Tax, Benefits & Integration",items:[
+      {id:"e1",t:"Confirm Belastingdienst registration",d:"Annual return March-April.",p:"high",w:-4,e:0,r:0},
+      {id:"e2",t:"Apply for zorgtoeslag",d:"Healthcare allowance.",p:"medium",w:-4,e:0,r:0},
+      {id:"e3",t:"Apply for huurtoeslag",d:"Rent allowance if eligible.",p:"medium",w:-4,e:0,r:0},
+      {id:"e4",t:"Family reunification",d:"IND application. EUR 210/person.",p:"high",w:-4,e:210,r:0,c:"imm"},
+      {id:"e5",t:"Begin Dutch language study",d:"Municipal courses often free.",p:"medium",w:-4,e:500,r:0,c:"misc"},
+      {id:"e6",t:"Register at Indian Embassy",d:"The Hague.",p:"medium",w:-6,e:0,r:0,lk:"https://www.indianembassythehague.gov.in"},
+    ]},
+  ]},
+];
+
+const DOC=[
+  {id:"passport",n:"Passport",d:"6+ months, 2 empty pages",q:true,a:false,g:"identity"},
+  {id:"birth",n:"Birth Certificate",d:"Original + apostille",q:true,a:true,g:"civil"},
+  {id:"marriage",n:"Marriage Certificate",d:"Original + apostille",q:false,a:true,g:"civil"},
+  {id:"degree",n:"Degree Certificates",d:"Originals + apostille",q:true,a:true,g:"education"},
+  {id:"pcc",n:"Police Clearance",d:"PSK + apostille",q:true,a:true,g:"legal"},
+  {id:"contract",n:"Employment Contract",d:"Signed copy",q:true,a:false,g:"employment"},
+  {id:"ind",n:"IND Decision Letter",d:"V-number",q:true,a:false,g:"immigration"},
+  {id:"mvv",n:"MVV Visa Sticker",d:"Type D in passport",q:true,a:false,g:"immigration"},
+  {id:"rental",n:"Rental Contract",d:"Legitimate address",q:true,a:false,g:"housing"},
+  {id:"landlord",n:"Landlord Consent",d:"Signed + ID copy",q:true,a:false,g:"housing"},
+  {id:"flights",n:"Flight Itinerary",d:"Confirmed booking",q:true,a:false,g:"travel"},
+  {id:"bsn",n:"BSN Confirmation",d:"From gemeente",q:true,a:false,g:"post"},
+  {id:"permit",n:"Residence Permit",d:"IND card",q:true,a:false,g:"post"},
+  {id:"ins",n:"Health Insurance",d:"Basisverzekering",q:true,a:false,g:"post"},
+  {id:"bank",n:"Dutch Bank Account",d:"IBAN",q:true,a:false,g:"post"},
+];
+
+const DG={identity:"Identity",civil:"Civil Status",education:"Education",legal:"Legal",employment:"Employment",immigration:"Immigration",housing:"Housing",travel:"Travel",post:"Post-Arrival"};
+const SL={ns:"Not Started",ip:"In Progress",ap:"Apostille Pending",ok:"Ready",sub:"Submitted",na:"N/A"};
+const SO=["ns","ip","ap","ok","sub","na"];
+const CL={doc:"Documents",imm:"Immigration",housing:"Housing",travel:"Travel",trn:"Transport",mo:"Monthly",misc:"Other"};
+const PR={critical:{l:"Critical",c:"#B04040"},high:{l:"High",c:"#B08030"},medium:{l:"Medium",c:"#4070A0"},low:{l:"Optional",c:"#707070"}};
+
+function sc(k,dk){return{ns:dk?"#5C574F":"#9E9890",ip:"#B08030",ap:"#A07030",ok:"#3D8B5E",sub:"#4070A0",na:dk?"#5C574F":"#9E9890"}[k]||"#707070"}
+
+function Emp({t1,t4,s2,bd,ac,title,desc,act}){
+  return <div style={{textAlign:"center",padding:"40px 16px",animation:"fadeIn .4s ease"}}>
+    <div style={{width:40,height:40,borderRadius:20,background:s2,border:"1px solid "+bd,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px"}}><div style={{width:12,height:12,borderRadius:6,border:"2px solid "+t4}}/></div>
+    <h3 style={{fontFamily:"'Source Serif 4',serif",fontSize:15,fontWeight:600,color:t1,marginBottom:3}}>{title}</h3>
+    <p style={{fontSize:11,color:t4,marginBottom:14}}>{desc}</p>
+    {act&&<button onClick={act} style={{padding:"7px 18px",background:ac,border:"none",borderRadius:3,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>Set travel date</button>}
+  </div>;
+}
+
+function App(){
+  const [ck,sC]=useState({});
+  const [td,sT]=useState("");
+  const [ds,sD]=useState({});
+  const [dn,sN]=useState({});
+  const [dr,sR]=useState({});
+  const [co,sO]=useState({});
+  const [vw,sV]=useState("list");
+  const [ph,sP]=useState("prep");
+  const [ex,sE]=useState(null);
+  const [fl,sF]=useState("all");
+  const [df,sDF]=useState("all");
+  const [dk,sDK]=useState(true);
+  const [wl,sW]=useState(true);
+  const [dp,sDP]=useState(false);
+  const [en,sEN]=useState(null);
+  const [nt,sNT]=useState("");
+  const [ld,sL]=useState(false);
+
+  useEffect(()=>{
+    const v=load();
+    if(v){
+      if(v.ck)sC(v.ck);if(v.td)sT(v.td);if(v.ds)sD(v.ds);if(v.dn)sN(v.dn);
+      if(v.dr)sR(v.dr);if(v.co)sO(v.co);if(v.ph)sP(v.ph);if(v.fl)sF(v.fl);
+      if(v.dk!==undefined)sDK(v.dk);if(v.wl===false)sW(false);if(v.df)sDF(v.df);
+    }
+    sL(true);
+  },[]);
+
+  useEffect(()=>{
+    if(!ld)return;
+    save({ck,td,ds,dn,dr,co,ph,fl,dk,wl,df});
+  },[ck,td,ds,dn,dr,co,ph,fl,dk,wl,df,ld]);
+
+  const bg=dk?"#0C111B":"#FAFAF9",s1=dk?"#131A2B":"#FFFFFF",s2=dk?"#1A2236":"#F5F4F2";
+  const s3=dk?"#212B42":"#ECEAE6",bd=dk?"rgba(255,255,255,.07)":"rgba(0,0,0,.07)";
+  const bd2=dk?"rgba(255,255,255,.12)":"rgba(0,0,0,.12)",t1=dk?"#F0EDE8":"#1A1814";
+  const t2=dk?"#C4BFB6":"#3D3830",t3=dk?"#8A847A":"#6B6560",t4=dk?"#5C574F":"#9E9890";
+  const ac=dk?"#C08B4A":"#9A6C2E",ab=dk?"rgba(192,139,74,.12)":"rgba(154,108,46,.08)";
+  const ad=dk?"rgba(192,139,74,.25)":"rgba(154,108,46,.18)";
+  const serif="'Source Serif 4',Georgia,serif";
+
+  const all=useMemo(()=>P.flatMap(p=>p.secs.flatMap(s=>s.items)),[]);
+  const tot=all.length,dn2=Object.keys(ck).length,pct=tot?(dn2/tot)*100:0;
+  const dL=td?Math.ceil((new Date(td)-new Date())/864e5):null;
+  const dSt=useMemo(()=>{const q=DOC.filter(x=>x.q),ok=q.filter(x=>ds[x.id]==="ok"||ds[x.id]==="sub");return{t:q.length,d:ok.length};},[ds]);
+
+  const alr=useMemo(()=>{
+    if(!td)return[];const tv=new Date(td),nw=new Date();
+    return all.filter(i=>!ck[i.id]&&!dr[i.id]&&i.w!==undefined).map(i=>{
+      const dl=new Date(tv);dl.setDate(dl.getDate()-i.w*7);
+      const dd=Math.ceil((dl-nw)/864e5);
+      if(dd>14||dd<-28)return null;
+      return{...i,dl,dd,u:dd<=0?"over":dd<=3?"urg":dd<=7?"soon":"up"};
+    }).filter(Boolean).sort((a,b)=>a.dd-b.dd);
+  },[td,ck,dr,all]);
+
+  const cst=useMemo(()=>{
+    const cats={};let te=0,ti=0,me=0;
+    all.forEach(it=>{if(!it.c)return;if(!cats[it.c])cats[it.c]={items:[],te:0,ti:0};
+      const e2=co[it.id+"e"]!==undefined?Number(co[it.id+"e"]):(it.e||0);
+      const i2=co[it.id+"i"]!==undefined?Number(co[it.id+"i"]):(it.r||0);
+      cats[it.c].items.push({...it,e2,i2});cats[it.c].te+=e2;cats[it.c].ti+=i2;
+      if(it.c==="mo")me+=e2;else{te+=e2;ti+=i2;}
+    });return{cats,te,ti,me,ge:te+me*3,gi:ti+(me*3)*EUR_INR};
+  },[all,co]);
+
+  const tline=useMemo(()=>{
+    if(!td)return null;const tv=new Date(td),ea=new Date(tv),la=new Date(tv);
+    ea.setDate(ea.getDate()-91);la.setDate(la.getDate()+91);
+    return{tv,ea,la,td2:(la-ea)/864e5};
+  },[td]);
+
+  const tog=useCallback(id=>{sC(p=>{const n={...p};if(n[id])delete n[id];else n[id]=Date.now();return n;});},[]);
+
+  if(!ld)return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:bg}}><div style={{width:24,height:24,border:"2px solid "+bd,borderTop:"2px solid "+ac,borderRadius:"50%",animation:"spin .7s linear infinite"}}/></div>;
+
+  const pd=P.find(x=>x.id===ph);
+
+  return(
+    <div style={{fontFamily:"'Outfit',sans-serif",background:bg,minHeight:"100vh",color:t2}}>
+      <style>{`::-webkit-scrollbar-thumb{background:${t4}}`}</style>
+
+      {wl&&<div className="np" style={{position:"fixed",inset:0,background:dk?"rgba(0,0,0,.8)":"rgba(0,0,0,.5)",backdropFilter:"blur(10px)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16,animation:"fadeIn .4s ease"}}>
+        <div style={{background:s1,border:"1px solid "+bd2,borderRadius:4,padding:"44px 36px",maxWidth:440,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,.3)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+            <div style={{width:34,height:34,borderRadius:3,background:ab,border:"1px solid "+ad,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:10,fontWeight:700,color:ac,letterSpacing:1}}>NL</span></div>
+            <div><div style={{fontFamily:serif,fontSize:18,fontWeight:600,color:t1}}>Relocation Planner</div><div style={{fontSize:11,color:t4,letterSpacing:.5}}>India to Netherlands</div></div>
+          </div>
+          <p style={{fontSize:13,color:t3,lineHeight:1.7,marginBottom:24}}>Track immigration tasks, document legalisation, budgets, and deadlines for your move to the Netherlands.</p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:24}}>
+            {["Task Checklist","Gantt Timeline","Document Vault","Budget Planner","Deadline Alerts","Print / PDF"].map(x=><div key={x} style={{padding:"7px 10px",borderRadius:3,border:"1px solid "+bd,background:s2,fontSize:11,fontWeight:500,color:t2}}>{x}</div>)}
+          </div>
+          <button onClick={()=>sW(false)} style={{width:"100%",padding:"10px 0",background:ac,border:"none",borderRadius:3,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",letterSpacing:.4}}>Begin Planning</button>
+        </div>
+      </div>}
+
+      <header className="np" style={{padding:"10px 16px 8px",borderBottom:"1px solid "+bd,background:s1}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:26,height:26,borderRadius:3,background:ab,border:"1px solid "+ad,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:8,fontWeight:700,color:ac,letterSpacing:1}}>NL</span></div>
+            <div style={{fontFamily:serif,fontSize:14,fontWeight:600,color:t1}}>Relocation Planner</div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
+            {dL!==null&&<span style={{padding:"2px 7px",borderRadius:3,fontSize:10,fontWeight:600,background:dL<=14?"rgba(176,64,64,.08)":dL<=30?"rgba(176,128,48,.1)":"rgba(64,112,160,.08)",color:dL<=14?"#B04040":dL<=30?"#B08030":"#4070A0"}}>{Math.abs(dL)}d {dL>0?"left":"past"}</span>}
+            {alr.length>0&&<button onClick={()=>sV("alerts")} style={{padding:"2px 6px",borderRadius:3,border:"1px solid "+bd,background:"rgba(176,64,64,.08)",color:"#B04040",fontSize:10,fontWeight:600,cursor:"pointer"}}>{alr.length} alert{alr.length!==1?"s":""}</button>}
+            <button onClick={()=>sDP(!dp)} style={{padding:"2px 6px",borderRadius:3,border:"1px solid "+bd,background:s2,color:t3,fontSize:10,cursor:"pointer"}}>{td?new Date(td).toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"Set date"}</button>
+            <button onClick={()=>sDK(!dk)} style={{padding:"2px 6px",borderRadius:3,border:"1px solid "+bd,background:s2,color:t3,fontSize:10,cursor:"pointer"}}>{dk?"Light":"Dark"}</button>
+            <button onClick={()=>window.print()} style={{padding:"2px 6px",borderRadius:3,border:"1px solid "+bd,background:s2,color:t3,fontSize:10,cursor:"pointer"}}>Print</button>
+          </div>
+        </div>
+        {dp&&<div style={{display:"flex",alignItems:"center",gap:8,marginTop:6,padding:"6px 8px",background:s2,borderRadius:3,border:"1px solid "+bd,animation:"fadeIn .2s ease",flexWrap:"wrap"}}>
+          <span style={{fontSize:11,color:t3}}>Travel date</span>
+          <input type="date" value={td} onChange={e=>{sT(e.target.value);sDP(false);}} style={{background:bg,border:"1px solid "+bd2,borderRadius:3,padding:"3px 7px",color:t1,fontSize:11}}/>
+          {td&&<button onClick={()=>{sT("");sDP(false);}} style={{background:"none",border:"none",color:"#B04040",fontSize:10,cursor:"pointer"}}>Clear</button>}
+        </div>}
+        <div style={{marginTop:8}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+            <span style={{fontSize:9,color:t4,letterSpacing:.8,textTransform:"uppercase"}}>{"Tasks "+dn2+"/"+tot+"  Docs "+dSt.d+"/"+dSt.t}</span>
+            <span style={{fontSize:11,fontWeight:600,color:t1}}>{Math.round(pct)}%</span>
+          </div>
+          <div style={{height:3,background:s3,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",borderRadius:2,width:pct+"%",background:pct===100?"#3D8B5E":ac,transition:"width .5s ease"}}/></div>
+        </div>
+      </header>
+
+      <nav className="np" style={{display:"flex",overflowX:"auto",borderBottom:"1px solid "+bd,background:s1}}>
+        {[["list","Checklist"],["time","Timeline"],["docs","Documents"],["cost","Budget"],["alerts","Alerts"]].map(([k,l])=>
+          <button key={k} onClick={()=>sV(k)} style={{display:"flex",alignItems:"center",gap:4,padding:"7px 12px",border:"none",background:"transparent",fontSize:11,fontWeight:500,cursor:"pointer",borderBottom:vw===k?"2px solid "+ac:"2px solid transparent",color:vw===k?t1:t4,transition:"all .15s",whiteSpace:"nowrap",letterSpacing:.2}}>
+            <span className="nl">{l}</span>
+            {k==="alerts"&&alr.length>0&&<span style={{background:"#B04040",color:"#fff",fontSize:8,fontWeight:700,padding:"1px 4px",borderRadius:5}}>{alr.length}</span>}
+          </button>
+        )}
+      </nav>
+
+      {vw==="list"&&<div>
+        <div className="np" style={{display:"flex",overflowX:"auto",borderBottom:"1px solid "+bd}}>
+          {P.map(p=>{const its=p.secs.flatMap(s=>s.items),d=its.filter(i=>ck[i.id]).length,pc=its.length?(d/its.length)*100:0,on=ph===p.id;
+            return <button key={p.id} onClick={()=>{sP(p.id);sE(null);}} style={{flex:"1 0 auto",minWidth:60,padding:"6px 6px 4px",border:"none",background:on?s2:"transparent",cursor:"pointer",textAlign:"center",borderBottom:on?"2px solid "+ac:"2px solid transparent",transition:"all .12s"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:3,marginBottom:1}}>
+                <span style={{fontSize:9,fontWeight:600,color:on?t1:t4}}>P{p.n}</span>
+                <span style={{fontSize:8,fontWeight:600,padding:"1px 4px",borderRadius:3,background:d===its.length&&its.length>0?"rgba(61,139,94,.1)":ab,color:d===its.length&&its.length>0?"#3D8B5E":ac}}>{d}/{its.length}</span>
+              </div>
+              <div style={{fontSize:9,color:on?t2:t4,whiteSpace:"nowrap"}}>{p.t}</div>
+              <div style={{height:2,background:s3,borderRadius:1,marginTop:3,overflow:"hidden"}}><div style={{height:"100%",width:pc+"%",background:ac,borderRadius:1,transition:"width .3s"}}/></div>
+            </button>;
+          })}
+        </div>
+        <div className="np" style={{display:"flex",justifyContent:"space-between",padding:"4px 16px",borderBottom:"1px solid "+bd,gap:4,overflowX:"auto"}}>
+          <div style={{display:"flex",gap:2}}>
+            {[["all","ALL"],["pending","PENDING"],["done","DONE"],["critical","CRITICAL"],["high","HIGH"]].map(([k,l])=>
+              <button key={k} onClick={()=>sF(k)} style={{padding:"2px 7px",borderRadius:3,border:fl===k?"1px solid "+ad:"1px solid transparent",background:fl===k?ab:"transparent",color:fl===k?ac:t4,fontSize:9,fontWeight:500,cursor:"pointer",letterSpacing:.5}}>{l}</button>
+            )}
+          </div>
+          <button onClick={()=>{if(confirm("Reset all progress?")){sC({});sD({});sN({});sR({});sO({});}}} style={{padding:"2px 7px",borderRadius:3,border:"1px solid "+bd,background:"transparent",color:t4,fontSize:9,cursor:"pointer",letterSpacing:.5}}>RESET</button>
+        </div>
+        <main className="ma" style={{padding:"14px 16px 80px",maxWidth:740,margin:"0 auto"}}>
+          {pd&&<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:9,fontWeight:600,color:ac,letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Phase {pd.n}</div>
+              <h2 style={{fontFamily:serif,fontSize:20,fontWeight:600,color:t1}}>{pd.t}</h2>
+              <p style={{fontSize:11,color:t4,marginTop:1}}>{pd.s}</p>
+            </div>
+            {pd.secs.map((sec,si)=>{
+              let items=sec.items;
+              if(fl==="pending")items=items.filter(i=>!ck[i.id]);
+              else if(fl==="done")items=items.filter(i=>ck[i.id]);
+              else if(fl==="critical"||fl==="high")items=items.filter(i=>i.p===fl);
+              if(!items.length)return null;
+              const sd=sec.items.filter(i=>ck[i.id]).length;
+              return <div key={si} style={{marginBottom:24}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,paddingBottom:5,borderBottom:"1px solid "+bd}}>
+                  <h3 style={{fontSize:11,fontWeight:600,color:t1,letterSpacing:.3}}>{sec.t}</h3>
+                  <span style={{fontSize:10,color:t4}}>{sd}/{sec.items.length}</span>
+                </div>
+                {items.map(item=>{const done=!!ck[item.id],isEx=ex===item.id,pri=PR[item.p];
+                  return <div key={item.id} style={{background:s1,border:"1px solid "+bd,borderLeft:"2px solid "+(done?"#3D8B5E":pri.c),marginBottom:1,opacity:done?.5:1,overflow:"hidden"}}>
+                    <div style={{display:"flex",alignItems:"flex-start",gap:9,padding:"8px 10px"}}>
+                      <button onClick={()=>tog(item.id)} style={{width:16,height:16,minWidth:16,borderRadius:3,border:"1.5px solid "+(done?"#3D8B5E":t4),background:done?"#3D8B5E":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",marginTop:1}}>
+                        {done&&<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </button>
+                      <div style={{flex:1,cursor:"pointer",minWidth:0}} onClick={()=>sE(isEx?null:item.id)}>
+                        <div style={{fontSize:12,lineHeight:1.5,color:done?t4:t1,textDecoration:done?"line-through":"none",fontWeight:done?400:500}}>{item.t}</div>
+                        <div style={{display:"flex",gap:6,marginTop:3,alignItems:"center",flexWrap:"wrap"}}>
+                          <span style={{fontSize:10,color:pri.c,fontWeight:500,letterSpacing:.3}}>{pri.l}</span>
+                          {item.e>0&&<span style={{fontSize:10,color:t4}}>EUR {item.e}</span>}
+                          {item.r>0&&<span style={{fontSize:10,color:t4}}>INR {item.r.toLocaleString()}</span>}
+                        </div>
+                      </div>
+                      <button style={{background:"none",border:"none",cursor:"pointer",padding:2,color:t4,fontSize:10}} onClick={()=>sE(isEx?null:item.id)}>{isEx?"\u25B4":"\u25BE"}</button>
+                    </div>
+                    {isEx&&<div style={{padding:"0 10px 10px 35px",animation:"fadeIn .2s ease"}}>
+                      <div style={{fontSize:11,lineHeight:1.7,color:t3,padding:"8px 12px",background:s2,borderRadius:3,border:"1px solid "+bd}}>{item.d}</div>
+                      {item.lk&&<a href={item.lk} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",fontSize:10,color:"#4070A0",textDecoration:"none",fontWeight:500,marginTop:5}}>{"Open resource \u2197"}</a>}
+                      {done&&ck[item.id]&&<div style={{fontSize:10,color:"#3D8B5E",marginTop:5}}>Completed {new Date(ck[item.id]).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}</div>}
+                    </div>}
+                  </div>;
+                })}
+              </div>;
+            })}
+          </div>}
+        </main>
+      </div>}
+
+      {vw==="time"&&<main className="ma" style={{padding:"14px 16px 80px",maxWidth:880,margin:"0 auto"}}>
+        {!td?<Emp t1={t1} t4={t4} s2={s2} bd={bd} ac={ac} title="Travel date required" desc="Set your travel date to generate the timeline." act={()=>sDP(true)}/>:
+        <div style={{animation:"fadeIn .3s ease"}}>
+          <div style={{fontSize:9,fontWeight:600,color:ac,letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Timeline</div>
+          <h2 style={{fontFamily:serif,fontSize:20,fontWeight:600,color:t1,marginBottom:1}}>Project Schedule</h2>
+          <p style={{fontSize:11,color:t4,marginBottom:14}}>Travel: {new Date(td).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}</p>
+          <div style={{overflowX:"auto",border:"1px solid "+bd,borderRadius:3,background:s1}}>
+            <div style={{display:"flex",borderBottom:"1px solid "+bd,position:"sticky",top:0,background:s1,zIndex:5}}>
+              <div className="gl" style={{width:170,minWidth:170,padding:"5px 8px",fontSize:9,color:t4,fontWeight:600,borderRight:"1px solid "+bd,letterSpacing:.5,textTransform:"uppercase"}}>Task</div>
+              <div style={{flex:1,minWidth:400,position:"relative",height:22}}>
+                {tline&&(()=>{const els=[];let m=new Date(tline.ea);m.setDate(1);if(m<tline.ea)m.setMonth(m.getMonth()+1);
+                  while(m<=tline.la){const p=((m-tline.ea)/864e5/tline.td2)*100;
+                    els.push(<div key={m.toISOString()} style={{position:"absolute",left:p+"%",fontSize:8,color:t4,whiteSpace:"nowrap",borderLeft:"1px solid "+bd,paddingLeft:3,height:"100%",display:"flex",alignItems:"center"}}>{m.toLocaleDateString("en-GB",{month:"short"})}</div>);
+                    m=new Date(m);m.setMonth(m.getMonth()+1);}
+                  const tp=((tline.tv-tline.ea)/864e5/tline.td2)*100;
+                  els.push(<div key="tl" style={{position:"absolute",left:tp+"%",top:0,bottom:0,width:1.5,background:"#B04040",zIndex:3}}><div style={{position:"absolute",top:0,left:3,fontSize:7,color:"#B04040",fontWeight:600,letterSpacing:.5}}>TRAVEL</div></div>);
+                  const nw=new Date(),np=((nw-tline.ea)/864e5/tline.td2)*100;
+                  if(np>=0&&np<=100)els.push(<div key="now" style={{position:"absolute",left:np+"%",top:0,bottom:0,width:1.5,background:"#3D8B5E",zIndex:3}}><div style={{position:"absolute",bottom:0,left:3,fontSize:7,color:"#3D8B5E",fontWeight:600}}>TODAY</div></div>);
+                  return els;})()}
+              </div>
+            </div>
+            {P.flatMap(p=>p.secs.flatMap(sec=>sec.items.filter(i=>i.w!==undefined).map(item=>{
+              if(!tline)return null;const d=new Date(tline.tv);d.setDate(d.getDate()-item.w*7);
+              const pos=Math.max(0,Math.min(100,((d-tline.ea)/864e5/tline.td2)*100));const done=!!ck[item.id];
+              return <div key={item.id} style={{display:"flex",borderBottom:"1px solid "+bd}}>
+                <div className="gl" style={{width:170,minWidth:170,padding:"3px 8px",fontSize:10,color:done?t4:t2,borderRight:"1px solid "+bd,display:"flex",alignItems:"center",gap:4,textDecoration:done?"line-through":"none"}}>
+                  <svg width="5" height="5"><circle cx="2.5" cy="2.5" r="2.5" fill={done?"#3D8B5E":ac}/></svg>
+                  <span style={{lineHeight:1.2}}>{item.t.length>30?item.t.slice(0,30)+"...":item.t}</span>
+                </div>
+                <div style={{flex:1,minWidth:400,position:"relative",height:22}}>
+                  <div style={{position:"absolute",top:"50%",left:pos+"%",transform:"translate(-50%,-50%)",width:7,height:7,borderRadius:2,background:done?"#3D8B5E":ac}} title={d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}/>
+                </div>
+              </div>;
+            })))}
+          </div>
+        </div>}
+      </main>}
+
+      {vw==="docs"&&<main className="ma" style={{padding:"14px 16px 80px",maxWidth:740,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8,marginBottom:14}}>
+          <div>
+            <div style={{fontSize:9,fontWeight:600,color:ac,letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Document Vault</div>
+            <h2 style={{fontFamily:serif,fontSize:20,fontWeight:600,color:t1}}>Legalisation Tracker</h2>
+          </div>
+          <div style={{padding:"6px 10px",borderRadius:3,border:"1px solid "+bd,background:"rgba(61,139,94,.1)",display:"flex",alignItems:"baseline",gap:4}}>
+            <span style={{fontSize:16,fontWeight:700,color:"#3D8B5E",fontFamily:serif}}>{dSt.d}</span>
+            <span style={{fontSize:10,color:t4}}>/ {dSt.t} ready</span>
+          </div>
+        </div>
+        <div className="np" style={{display:"flex",gap:2,marginBottom:12,flexWrap:"wrap"}}>
+          {[["all","ALL"],["apo","APOSTILLE"],["pend","PENDING"],["rdy","READY"]].map(([k,l])=>
+            <button key={k} onClick={()=>sDF(k)} style={{padding:"2px 7px",borderRadius:3,border:df===k?"1px solid "+ad:"1px solid transparent",background:df===k?ab:"transparent",color:df===k?ac:t4,fontSize:9,fontWeight:500,cursor:"pointer",letterSpacing:.5}}>{l}</button>
+          )}
+        </div>
+        {Object.keys(DG).map(gk=>{
+          let docs=DOC.filter(x=>x.g===gk);
+          if(df==="apo")docs=docs.filter(x=>x.a);
+          if(df==="pend")docs=docs.filter(x=>!["ok","sub","na"].includes(ds[x.id]||"ns"));
+          if(df==="rdy")docs=docs.filter(x=>ds[x.id]==="ok"||ds[x.id]==="sub");
+          if(!docs.length)return null;
+          return <div key={gk} style={{marginBottom:18}}>
+            <div style={{fontSize:9,fontWeight:600,color:t3,letterSpacing:1,textTransform:"uppercase",marginBottom:6,paddingBottom:4,borderBottom:"1px solid "+bd}}>{DG[gk]}</div>
+            {docs.map(doc=>{const st=ds[doc.id]||"ns";const stc=sc(st,dk);
+              return <div key={doc.id} style={{background:s1,border:"1px solid "+bd,padding:"9px 12px",marginBottom:1}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+                      <span style={{fontSize:12,fontWeight:600,color:t1}}>{doc.n}</span>
+                      {doc.q&&<span style={{fontSize:8,fontWeight:700,color:"#B04040",letterSpacing:.7,textTransform:"uppercase"}}>Required</span>}
+                      {doc.a&&<span style={{fontSize:8,fontWeight:600,padding:"1px 4px",borderRadius:2,background:ab,color:ac,letterSpacing:.4}}>Apostille</span>}
+                    </div>
+                    <p style={{fontSize:10,color:t4,marginTop:1}}>{doc.d}</p>
+                  </div>
+                  <select className="np" value={st} onChange={e2=>sD(p=>({...p,[doc.id]:e2.target.value}))} style={{fontSize:10,fontWeight:600,border:"1px solid "+bd2,borderRadius:3,padding:"3px 5px",cursor:"pointer",color:stc,background:s2,outline:"none",minWidth:80}}>
+                    {SO.map(k=><option key={k} value={k}>{SL[k]}</option>)}
+                  </select>
+                </div>
+                <div className="np" style={{marginTop:4}}>
+                  {en===doc.id?<div style={{display:"flex",gap:3}}>
+                    <input type="text" value={nt} onChange={e2=>sNT(e2.target.value)} placeholder="Note..." style={{flex:1,background:bg,border:"1px solid "+bd2,borderRadius:3,padding:"2px 6px",color:t1,fontSize:10,outline:"none"}} autoFocus onKeyDown={e2=>{if(e2.key==="Enter"){sN(p=>({...p,[doc.id]:nt}));sEN(null);sNT("");}}}/>
+                    <button onClick={()=>{sN(p=>({...p,[doc.id]:nt}));sEN(null);sNT("");}} style={{background:ac,border:"none",borderRadius:3,padding:"2px 8px",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>Save</button>
+                  </div>:<button onClick={()=>{sEN(doc.id);sNT(dn[doc.id]||"");}} style={{background:"none",border:"none",color:dn[doc.id]?t3:t4,fontSize:10,cursor:"pointer",padding:0,textAlign:"left"}}>{dn[doc.id]||"+ Add note"}</button>}
+                </div>
+              </div>;
+            })}
+          </div>;
+        })}
+      </main>}
+
+      {vw==="cost"&&<main className="ma" style={{padding:"14px 16px 80px",maxWidth:740,margin:"0 auto"}}>
+        <div style={{fontSize:9,fontWeight:600,color:ac,letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Budget</div>
+        <h2 style={{fontFamily:serif,fontSize:20,fontWeight:600,color:t1,marginBottom:1}}>Cost Estimate</h2>
+        <p style={{fontSize:11,color:t4,marginBottom:14}}>Edit amounts with your actual costs. 1 EUR = INR {EUR_INR}</p>
+        <div className="cg" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:20}}>
+          {[["One-Time","EUR "+cst.te.toLocaleString(),"+ INR "+cst.ti.toLocaleString(),ac,ab,ad],
+            ["Monthly","EUR "+cst.me+"/mo","~ INR "+Math.round(cst.me*EUR_INR).toLocaleString()+"/mo","#4070A0","rgba(64,112,160,.08)","rgba(64,112,160,.15)"],
+            ["First 3 Months","EUR "+Math.round(cst.ge).toLocaleString(),"~ INR "+Math.round(cst.gi).toLocaleString(),"#3D8B5E","rgba(61,139,94,.1)","rgba(61,139,94,.15)"]
+          ].map(([l,v1,v2,cl,cbg,cbd])=><div key={l} style={{padding:"12px 14px",borderRadius:3,border:"1px solid "+cbd,background:cbg}}>
+            <div style={{fontSize:8,fontWeight:600,color:cl,letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>{l}</div>
+            <div style={{fontSize:16,fontWeight:700,color:t1,fontFamily:serif}}>{v1}</div>
+            <div style={{fontSize:10,color:t4,marginTop:1}}>{v2}</div>
+          </div>)}
+        </div>
+        {Object.entries(CL).map(([ck2,label])=>{
+          const data=cst.cats[ck2];if(!data||!data.items.length)return null;
+          return <div key={ck2} style={{marginBottom:18}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,paddingBottom:4,borderBottom:"1px solid "+bd}}>
+              <span style={{fontSize:9,fontWeight:600,color:t3,letterSpacing:1,textTransform:"uppercase"}}>{label}</span>
+              <span style={{fontSize:10,color:t3}}>{data.te>0?"EUR "+data.te.toLocaleString():""}{data.te>0&&data.ti>0?" + ":""}{data.ti>0?"INR "+data.ti.toLocaleString():""}{ck2==="mo"?"/mo":""}</span>
+            </div>
+            {data.items.map(item=><div key={item.id} style={{background:s1,border:"1px solid "+bd,display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,padding:"7px 12px",marginBottom:1}}>
+              <div style={{flex:1,fontSize:11,color:t1,fontWeight:500}}>{item.t}</div>
+              <div style={{display:"flex",gap:3,alignItems:"center",flexShrink:0}}>
+                {(item.e2>0||item.e>0)&&<div style={{display:"flex",alignItems:"center",gap:2}}>
+                  <span style={{fontSize:9,color:t4}}>EUR</span>
+                  <input type="number" value={co[item.id+"e"]!==undefined?co[item.id+"e"]:(item.e||"")} onChange={e2=>sO(p=>({...p,[item.id+"e"]:e2.target.value}))} style={{width:52,background:bg,border:"1px solid "+bd,borderRadius:3,padding:"2px 5px",color:t1,fontSize:10,outline:"none",textAlign:"right"}}/>
+                </div>}
+                {(item.i2>0||item.r>0)&&<div style={{display:"flex",alignItems:"center",gap:2}}>
+                  <span style={{fontSize:9,color:t4}}>INR</span>
+                  <input type="number" value={co[item.id+"i"]!==undefined?co[item.id+"i"]:(item.r||"")} onChange={e2=>sO(p=>({...p,[item.id+"i"]:e2.target.value}))} style={{width:58,background:bg,border:"1px solid "+bd,borderRadius:3,padding:"2px 5px",color:t1,fontSize:10,outline:"none",textAlign:"right"}}/>
+                </div>}
+              </div>
+            </div>)}
+          </div>;
+        })}
+      </main>}
+
+      {vw==="alerts"&&<main className="ma" style={{padding:"14px 16px 80px",maxWidth:740,margin:"0 auto"}}>
+        <div style={{fontSize:9,fontWeight:600,color:ac,letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Alerts</div>
+        <h2 style={{fontFamily:serif,fontSize:20,fontWeight:600,color:t1,marginBottom:1}}>Deadline Monitor</h2>
+        <p style={{fontSize:11,color:t4,marginBottom:14}}>{td?"From: "+new Date(td).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}):"Set travel date to activate."}</p>
+        {!td?<Emp t1={t1} t4={t4} s2={s2} bd={bd} ac={ac} title="Travel date required" desc="Set travel date to generate alerts." act={()=>sDP(true)}/>
+        :alr.length===0?<Emp t1={t1} t4={t4} s2={s2} bd={bd} ac={ac} title="No pending alerts" desc="All deadlines are resolved or not yet in range."/>
+        :<div>
+          {[["over","Overdue","#B04040","rgba(176,64,64,.08)"],["urg","Urgent","#B08030","rgba(176,128,48,.1)"],["soon","This Week","#4070A0","rgba(64,112,160,.08)"],["up","Upcoming","#707070",s2]].map(([k,l,cl,abg])=>{
+            const items=alr.filter(x=>x.u===k);if(!items.length)return null;
+            return <div key={k} style={{marginBottom:18}}>
+              <div style={{fontSize:9,fontWeight:700,color:cl,letterSpacing:1.2,textTransform:"uppercase",marginBottom:6}}>{l}</div>
+              {items.map(item=><div key={item.id} style={{padding:"8px 12px",marginBottom:1,borderLeft:"2px solid "+cl,background:abg,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:11,fontWeight:600,color:t1,marginBottom:1}}>{item.t}</div>
+                  <div style={{fontSize:10,color:t3}}>{item.dl.toLocaleDateString("en-GB",{day:"numeric",month:"short"})+" "}{item.dd<=0?Math.abs(item.dd)+"d overdue":item.dd+"d left"}</div>
+                </div>
+                <div className="np" style={{display:"flex",gap:2}}>
+                  <button onClick={()=>tog(item.id)} style={{width:20,height:20,borderRadius:3,border:"1px solid "+bd2,background:s2,color:"#3D8B5E",fontSize:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}} title="Done">{"\u2713"}</button>
+                  <button onClick={()=>sR(p=>({...p,[item.id]:true}))} style={{width:20,height:20,borderRadius:3,border:"1px solid "+bd2,background:s2,color:t4,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}} title="Dismiss">{"\u00D7"}</button>
+                </div>
+              </div>)}
+            </div>;
+          })}
+        </div>}
+      </main>}
+
+      <footer className="np" style={{padding:"8px 16px",borderTop:"1px solid "+bd,textAlign:"center",fontSize:8,color:t4,letterSpacing:.5}}>Sources: IND.nl / NetherlandsWorldwide / Belastingdienst / MEA India</footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
